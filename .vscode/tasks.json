@@ -1,23 +1,20 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "cmake",
             "type": "shell",
+            "label": "cmake",
             "command": "cmake",
             "options": {
                 "cwd": "${workspaceRoot}/build"
             },
             "args": [
                 "--build",
-                "${workspaceRoot}/build",
+                "${workspaceRoot}/build"
             ],
-            "group": "build",
-            "presentation": {
-                // Reveal the output only if unrecognized errors occur.
-                "reveal": "silent"
+            "group": {
+                "kind": "build",
+                "isDefault": true
             }
         }
     ]
