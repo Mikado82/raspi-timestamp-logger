@@ -1,101 +1,78 @@
-#include <chrono>
-#include <iomanip>
 #include <iostream>
-#include <thread>
-#include <fstream>
 
-#include <wiringPi.h>
+#include "application.hpp"
+#include "timestamp_writers.hpp"
 
 using namespace std;
 
-// Global variables
-ofstream file;
-chrono::system_clock::time_point last_trigger;
-
-string get_timestamp()
+int main(int argc, char** argv)
 {
-    // Based on:
-    // https://gist.github.com/dtoma/cc3d5b2dd4c03a25886adededcc1e3b9
+    // If a parameter is specified, use it as
+    // the INI file; otherwise, use default.
+    string ini_file;
+    if(argc > 1) ini_file = argv[1];
+    else ini_file = "config.ini";
 
-    auto now = chrono::high_resolution_clock::now();
-    auto time = chrono::system_clock::to_time_t(now);
-    auto tm = *localtime(&time);
+    // Get the singleton instance of our application
+    Application &app = Application::get_instance();
 
-    auto epoch = now.time_since_epoch();
-    auto us = chrono::duration_cast<chrono::microseconds>(epoch).count() % 1000000;
+    // Used for exception handling
+    exception_ptr ex_ptr;
 
-    stringstream sstr;
-    sstr << put_time(&tm, "%F %T.") << us << put_time(&tm, " %Z");
-
-    return sstr.str();
-}
-
-void buttonPushHandler()
-{
-    // Calculate elapsed time
-    auto now = chrono::high_resolution_clock::now();
-    auto elapsed = now - last_trigger;
-
-    // Check if at least one second elapsed since last trigger
-    if(elapsed > chrono::milliseconds(1000))
+    try
     {
-        // Get current timestamp
-        string timestamp = get_timestamp();
+        // Run the application
+        app.run(ini_file);
+    }    
+    catch(...)
+    {
+        // Capture the current exception
+        ex_ptr = current_exception();
+    }
+
+    try
+    {
+        // See if the file writer handles this exception
+        file_writer::handle_exception(ex_ptr);
         
-        // Print to console and write to file
-        cout << timestamp << "\n";
-        file << timestamp << "\n";
-        file.flush();
-
-        // Update last trigger time
-        last_trigger = now;
-    }
-    // Only in debug builds
-    #ifndef NDEBUG
-    else
-    {
-        // Output info that trigger was blocked
-        cout << "BLOCKED!\n";
-    }
-    #endif
-}
-
-int main(int, char**)
-{
-    // Parameters
-    constexpr int PIN = 5;
-    constexpr int EDGE = INT_EDGE_RISING; //INT_EDGE_FALLING
-    const string filename = "starttimes.txt";
-
-    // Print info if this is a debug build
-    #ifndef NDEBUG
-    cout << "DEBUG BUILD\n";
-    #endif
-    
-    // Open output file, always append
-    file.open(filename, ios::out | ios::app);
-    if(!file.is_open())
-    {
-        cerr << "Could not open output file '" << filename << "'.\nExiting.\n";
+        // Return 1 to indicate an error with the file output
         return 1;
     }
-
-    // Initialize wiringPi library
-    wiringPiSetup();
-
-    // Setup pin to input, pull up/down mode to off
-    pinMode(PIN, INPUT);
-    pullUpDnControl(PIN, PUD_OFF);
-
-    // Bind to interrupt to our handler function
-	wiringPiISR(PIN, EDGE, &buttonPushHandler);
-
-    // Wait for interrupts
-    while(true)
+    catch(...)
     {
-        // Just sleep
-        this_thread::sleep_for(chrono::milliseconds(1000));
+        // If not, capture the exception again
+        ex_ptr = current_exception();
     }
 
+    try
+    {
+        // See if the database writer handles this exception
+        db_writer::handle_exception(ex_ptr);
+
+        // Return 2 to indicate an error with the database output
+        return 2;
+    }
+    catch(...)
+    {
+        // If not, capture the exception again
+        ex_ptr = current_exception();
+    }
+
+    try
+    {
+        // Rethrow to address remaining exceptions
+        if(ex_ptr) rethrow_exception(ex_ptr);
+    }
+    // Catch all standard library exceptions
+    catch(const exception& e)
+    {
+        // Display error message
+        cerr << "ERROR: " << e.what() << "\n";
+        
+        // Return 3 to indicate any other error
+        return 3;
+    }
+
+    // Success
     return 0;
 }
