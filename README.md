@@ -3,13 +3,13 @@
 ## Build/Install Dependencies
 
 #### WiringPi
-- [WiringPi](https://github.com/WiringPi/WiringPi)
+- Homepage: [WiringPi](https://github.com/WiringPi/WiringPi)
 - Just follow the instructions in the [Installing from source](https://github.com/WiringPi/WiringPi?tab=readme-ov-file#from-source) section on their Github.
 - Use any directory outside the git project folder
 
 #### Boost
-- [Boost::mySQL](https://github.com/boostorg/mysql), requires [Boost 1.82](https://www.boost.org/doc/libs/1_82_0) or higher
-- Tested with [Boost 1.87](https://www.boost.org/doc/libs/1_87_0/)
+- Homepage: [Boost::mySQL](https://github.com/boostorg/mysql)
+- Requires [Boost 1.82](https://www.boost.org/doc/libs/1_82_0) or higher, tested with [Boost 1.87](https://www.boost.org/doc/libs/1_87_0/)
 - Based on [Boost installation instructions](https://www.boost.org/doc/libs/1_87_0/more/getting_started/unix-variants.html)
 - Use any directory outside the git project folder
 
@@ -29,25 +29,25 @@ sudo ./b2 install
 
 ## Build and Run
 
-#### Initialize cmake
+#### Run cmake
 - In the project directory, run:
   ``` shell
-  mkdir build
-  cmake -B ./build
+  cmake -S ./src -B ./build -DCMAKE_BUILD_TYPE=Release
   ```
+- If you want to create a debug build, replace ``Release`` with ``Debug``.
 
 #### Build and Run on the Command Line
-- In the project directory, run:
+- Change into the ``./build`` directory and run:
   ``` shell
-  mkdir build
-  cmake -B ./build
-  cmake --build ./build -j 4
+  make -j 4
   ```
-- To start the program, run:
+  - The ``-j 4`` is optional and compiles up to four files in parallel.
+- To launch the program, run:
   ```shell
   ./build/starttime
   ```
+  - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument. 
 
 #### Build an Run using VS Code
-- For VS Code, build and launch tasks are provided in the ``.vscode`` folder.
-- Use ``Ctrl+F5`` to build and launch (or ``F5`` for debugging)
+- Configuration of VS Code: TODO
+- Use ``Ctrl+F5`` to build and launch (or ``F5`` for debugging).
