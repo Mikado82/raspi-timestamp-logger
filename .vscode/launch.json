@@ -8,6 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
+            "preLaunchTask": "cmake",
             "program": "${workspaceFolder}/build/starttime",
             "args": [],
             "stopAtEntry": false,
