@@ -32,6 +32,7 @@ void program_config::read_from_ini(std::string filename)
     // Read the output file name; provide default values
     output_file = pt.get<string>("Output.File", output_file);
     write_to_db = pt.get<bool>("Output.Database", write_to_db);
+    test_string = pt.get<string>("Output.TestString", "");
     write_to_file = !output_file.empty();
 
     // Read the DB parameters
@@ -76,4 +77,8 @@ void program_config::print()
         cout << "   User: " << db_params.username << "\n";
         cout << "   Table: " << db_table_name << "\n";
     }
+
+    // Test string info
+    if(!test_string.empty())
+        cout << "Test string written at startup: " << test_string << "\n";
 }

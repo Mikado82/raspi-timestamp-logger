@@ -1,13 +1,12 @@
 #include "application.hpp"
 #include "timestamp_writers.hpp"
 
-#include <signal.h>
-#include <cstdlib>
-
 #include <iomanip>
 #include <iostream>
 #include <chrono>
 #include <exception>
+
+#include <signal.h>
 
 #include <wiringPi.h>
 
@@ -39,7 +38,7 @@ void Application::sig_int_term_handler(int signal)
     // Initiate a graceful shutdown
     if(app.shutdown_flag == false)
     {
-        // Dissplay message
+        // Display message
         cout << "Graceful shutdown initiated\n";
 
         // Set shutdown flag and signal the run() method
@@ -63,7 +62,7 @@ void Application::setup_gpio()
     pinMode(config.pin, INPUT);
     pullUpDnControl(config.pin, PUD_OFF);
 
-    // Bind to interrupt to our handler function
+    // Bind the interrupt to our handler function
 	wiringPiISR(config.pin, config.edge, &Application::gpio_button_handler);
 }
 
@@ -133,14 +132,15 @@ void Application::writer_thread(
     // the input queue, but not yet written
     queue<string> unwritten_timestamps;
 
-    bool is_retrying = false;
+    // Flags
+    bool retrying = false;
     bool done = false;
 
     do
     {
         // If we are not retrying, wait for the handler to push a
         // timestamp to the input queue or for the signal that we are done
-        if(is_retrying == false && input_queue.wait_for_items())
+        if(retrying == false && input_queue.wait_for_items())
         {
             // Set flag
             done = true;
@@ -152,11 +152,11 @@ void Application::writer_thread(
         while(input_queue.pop(timestamp))
             unwritten_timestamps.push(timestamp);
 
-        // If we are re-trying:
-        if(is_retrying)
+        // If we are retrying:
+        if(retrying)
         {
             // Display info
-            cout << "Re-trying to write to the " << name << " in 10 sec... ";
+            cout << "Retrying to write to the " << name << " in 10 sec... ";
             cout << "(unwritten timestamps: " << unwritten_timestamps.size() << ")\n";
             
             // Wait five seconds
@@ -202,7 +202,7 @@ void Application::writer_thread(
         
         // Check if everything was written and
         // set the retrying flag accordingly
-        is_retrying = !unwritten_timestamps.empty();
+        retrying = !unwritten_timestamps.empty();
     }
     // Repeat until we are done
     while(done == false);
@@ -274,7 +274,11 @@ bool Application::run(string ini_file)
         cout << "Testing file output...\n";
         
         // Try creating a file writer opject
-        file_writer(config.output_file);
+        file_writer writer(config.output_file);
+
+        // Try writing the test string
+        if(!config.test_string.empty())
+            writer(config.test_string);
     }
 
     // Test the connection to the DB server
@@ -283,7 +287,11 @@ bool Application::run(string ini_file)
         cout << "Testing database connection...\n";
 
         // Try create a database writer opject
-        db_writer(config.db_params, config.db_table_name);
+        db_writer writer(config.db_params, config.db_table_name);
+
+        // Try writing the test string
+        if(!config.test_string.empty())
+            writer(config.test_string);
     }
 
     // Setup the GPIO ports

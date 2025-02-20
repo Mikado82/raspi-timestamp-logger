@@ -28,6 +28,7 @@ public:
     bool write_to_file = false;
     bool write_to_db = false;
     std::string output_file;
+    std::string test_string;
     
     // Database connection info
     boost::mysql::connect_params db_params;
