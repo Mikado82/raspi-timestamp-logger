@@ -5,12 +5,11 @@
             "type": "shell",
             "label": "cmake",
             "command": "cmake",
-            "options": {
-                "cwd": "${workspaceRoot}/build"
-            },
             "args": [
                 "--build",
-                "${workspaceRoot}/build"
+                "${workspaceRoot}/build",
+                "-j",
+                "4"
             ],
             "group": {
                 "kind": "build",
