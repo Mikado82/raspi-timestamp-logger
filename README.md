@@ -7,7 +7,7 @@
 - Just follow the instructions in the [Installing from source](https://github.com/WiringPi/WiringPi?tab=readme-ov-file#from-source) section on their Github.
 - Use any directory outside the git project folder
 
-#### Boost
+#### Boost.MySQL
 - Homepage: [Boost::mySQL](https://github.com/boostorg/mysql)
 - Requires [Boost 1.82](https://www.boost.org/doc/libs/1_82_0) or higher, tested with [Boost 1.87](https://www.boost.org/doc/libs/1_87_0/)
 - Based on [Boost installation instructions](https://www.boost.org/doc/libs/1_87_0/more/getting_started/unix-variants.html)
@@ -47,7 +47,3 @@ sudo ./b2 install
   ./build/starttime
   ```
   - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument. 
-
-#### Build an Run using VS Code
-- Configuration of VS Code: TODO
-- Use ``Ctrl+F5`` to build and launch (or ``F5`` for debugging).
