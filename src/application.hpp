@@ -55,17 +55,6 @@ private:
         Args&&... args
     );
     
-    // Function for writing timestamps to a file
-    static void write_timestamps_to_file(
-        std::queue<std::string> &timestamps,
-        std::string filename);
-
-    // Function for writing timestamps to a database
-    static void write_timestamps_to_db(
-        std::queue<std::string> &timestamps,
-        boost::mysql::connect_params db_params,
-        std::string db_table_name);
-
     // Get a nicely formatted timestamp
     static std::string get_timestamp();
 
