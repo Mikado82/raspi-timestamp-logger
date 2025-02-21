@@ -128,6 +128,14 @@ void Application::writer_thread(
     synced_queue<string> &input_queue,
     function<TimestampWriter()> create_writer)
 {   
+    // Compile-time check if the writer is a suitable callable
+    static_assert(is_invocable_v<TimestampWriter, const string&>,
+        "A timestamp writer must be callable with a 'const string&' parameter.");
+
+    // Compile-time check if the writer's handle_exception function has a correct signature
+    static_assert(is_same_v<decltype(TimestampWriter::handle_exception), void(exception_ptr)>,
+        "A timestamp writer's must be have a static member function 'void handle_exception(std::exception_ptr)'.");
+
     // Local queue of timestamps retrieved from
     // the input queue, but not yet written
     queue<string> unwritten_timestamps;
@@ -136,78 +144,94 @@ void Application::writer_thread(
     bool retrying = false;
     bool done = false;
 
-    do
+    // Try/catch block around entire thread loop
+    try
     {
-        // If we are not retrying, wait for the handler to push a
-        // timestamp to the input queue or for the signal that we are done
-        if(retrying == false && input_queue.wait_for_items())
+        // Thread loop
+        do
         {
-            // Set flag
-            done = true;
-        }
-
-        // Pop all timestamps from the interrupt queue and
-        // add them to the local queue of unwritten timestamps
-        string timestamp;
-        while(input_queue.pop(timestamp))
-            unwritten_timestamps.push(timestamp);
-
-        // If we are retrying:
-        if(retrying)
-        {
-            // Display info
-            cout << "Retrying to write to the " << name << " in 10 sec... ";
-            cout << "(unwritten timestamps: " << unwritten_timestamps.size() << ")\n";
-            
-            // Wait five seconds
-            this_thread::sleep_for(chrono::seconds(10));
-
-            // Check if we are done
-            if(input_queue.is_done())
+            // If we are not retrying, wait for the handler to push a
+            // timestamp to the input queue or for the signal that we are done
+            if(retrying == false && input_queue.wait_for_items())
             {
                 // Set flag
                 done = true;
             }
-        }
-    
-        // Timestamp writing
-        exception_ptr ex_ptr;
-        try
-        {
-            // Create a writer object
-            TimestampWriter writer = create_writer();
 
-            // Get each timestamp from the unwritten queue
-            while(!unwritten_timestamps.empty())
+            // Pop all timestamps from the interrupt queue and
+            // add them to the local queue of unwritten timestamps
+            string timestamp;
+            while(input_queue.pop(timestamp))
+                unwritten_timestamps.push(timestamp);
+
+            // If we are retrying:
+            if(retrying)
             {
-                // Get the front timestamp
-                string timestamp = unwritten_timestamps.front();
+                // Display info
+                cout << "Retrying to write to the " << name << " in 10 sec... ";
+                cout << "(unwritten timestamps: " << unwritten_timestamps.size() << ")\n";
+                
+                // Wait five seconds
+                this_thread::sleep_for(chrono::seconds(10));
 
-                // Write the timestamp
-                writer(timestamp);
-
-                // Only now remove it from the queue
-                unwritten_timestamps.pop();
+                // Check if we are done
+                if(input_queue.is_done())
+                {
+                    // Set flag
+                    done = true;
+                }
             }
-        }
-        catch(...)
-        {
-            // Capture the current exception
-            ex_ptr = current_exception(); 
-        }
-
-        // If there was an exception, try to handle it
-        // via call the writer's exception handler function
-        if(ex_ptr) TimestampWriter::handle_exception(ex_ptr);
         
-        // Check if everything was written and
-        // set the retrying flag accordingly
-        retrying = !unwritten_timestamps.empty();
-    }
-    // Repeat until we are done
-    while(done == false);
+            // Timestamp writing
+            exception_ptr ex_ptr;
+            try
+            {
+                // Create a writer object
+                TimestampWriter writer = create_writer();
 
-    // Report any unwritten timestamps
+                // Get each timestamp from the unwritten queue
+                while(!unwritten_timestamps.empty())
+                {
+                    // Get the front timestamp
+                    string timestamp = unwritten_timestamps.front();
+
+                    // Write the timestamp
+                    writer(timestamp);
+
+                    // Only now remove it from the queue
+                    unwritten_timestamps.pop();
+                }
+            }
+            catch(...)
+            {
+                // Capture the current exception
+                ex_ptr = current_exception(); 
+            }
+
+            // If there was an exception, try to handle it
+            // via call the writer's exception handler function
+            if(ex_ptr) TimestampWriter::handle_exception(ex_ptr);
+            
+            // Check if everything was written and
+            // set the retrying flag accordingly
+            retrying = !unwritten_timestamps.empty();
+        }
+        // Repeat until we are done
+        while(done == false);
+    }
+    // Catch anything that has not been caught inside the thread loop
+    catch(const std::exception& err)
+    {
+        // Display the error and a note that this exception is not recoverable
+        cerr << "\n-----------------------------------------------------------------\n";
+        cerr << "FATAL error: " << err.what() << "\n\n";
+        cerr << "This is an uncaught exception in the " << name << " writer thread.\n";
+        cerr << "The program will keep running, but the thread will stop working.\n";
+        cerr << "Therefore, no more timestamps are written to the " << name << ".\n";
+        cerr << "-----------------------------------------------------------------\n\n";
+    }
+
+    // Report any unwritten timestampos
     if(!unwritten_timestamps.empty())
     {
         cout << "\n---------------------------------------------------\n";
@@ -221,36 +245,6 @@ void Application::writer_thread(
         }
         
         cout << "---------------------------------------------------\n\n";
-    }
-}
-
-template<typename TimestampWriter, typename... Args>
-void Application::writer_thread_wrapper(
-    const string_view name, Args&&... args)
-{
-    // Compile-time check if the writer is a suitable callable
-    static_assert(is_invocable_v<TimestampWriter, const string&>,
-        "A timestamp writer must be callable with a 'const string&' parameter.");
-
-    // Compile-time check if the writer's handle_exception function has a correct signature
-    static_assert(is_same_v<decltype(TimestampWriter::handle_exception), void(exception_ptr)>,
-        "A timestamp writer's must be have a static member function 'void handle_exception(std::exception_ptr)'.");
-
-    try
-    {
-        // Call the actual thread function, forwarding arguments
-        Application::writer_thread<TimestampWriter>(name, forward<Args>(args)...);
-    }
-    // Catch anything that has not been caught inside the task
-    catch(const std::exception& err)
-    {
-        // Display the error and a note that this exception is not recoverable
-        cerr << "\n-----------------------------------------------------------------\n";
-        cerr << "FATAL error: " << err.what() << "\n\n";
-        cerr << "This is an uncaught exception in the " << name << " writer thread.\n";
-        cerr << "The program will keep running, but the thread will stop working.\n";
-        cerr << "Therefore, no more timestamps are written to the " << name << ".\n";
-        cerr << "-----------------------------------------------------------------\n\n";
     }
 }
 
@@ -307,7 +301,7 @@ bool Application::run(string ini_file)
 
         // Create the thread
         file_writer_thread = thread([this, create_file_writer]() {
-            writer_thread_wrapper<file_writer>("file", file_writer_queue, create_file_writer);
+            writer_thread<file_writer>("file", file_writer_queue, create_file_writer);
         });
     }
 
@@ -321,7 +315,7 @@ bool Application::run(string ini_file)
 
         // Create the thread
         db_writer_thread = thread([this, create_db_writer]() {
-            writer_thread_wrapper<db_writer>("database", db_writer_queue, create_db_writer);
+            writer_thread<db_writer>("database", db_writer_queue, create_db_writer);
         });
     }
 

@@ -39,7 +39,7 @@ private:
     // Time of the last trigger
     std::chrono::system_clock::time_point last_trigger;
 
-    // The main writer thread function
+    // The writer thread function
     template<typename TimestampWriter>
     static void writer_thread(
         const std::string_view name,
@@ -47,14 +47,6 @@ private:
         std::function<TimestampWriter()> create_writer
     );
 
-    // A wrapper around the writer thread function to
-    // catch any exception thrown in the thread function
-    template<typename TimestampWriter, typename... Args>
-    static void writer_thread_wrapper(
-        const std::string_view name,
-        Args&&... args
-    );
-    
     // Get a nicely formatted timestamp
     static std::string get_timestamp();
 
