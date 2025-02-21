@@ -50,12 +50,12 @@ sudo ./b2 install
   - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument.
   
 ## Setup Test Database
-- MariaDB-Container erzeugen und darauf verbinden
+- Create MariaDB docker container and connect to it:
 ```
 docker run -p 3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=starttimes123! -d mariadb:latest
 docker exec -it mdb mariadb --user root -pstarttimes123!
 ```
-- Datenbank und Tabelle anlegen
+- Create database and table:
 ```
 CREATE DATABASE regatta;
 USE regatta;
@@ -65,13 +65,9 @@ CREATE TABLE starttimes (
 	PRIMARY KEY (start_id));
 SELECT * FROM starttimes;
 ```
-- Zum Testen: Datenbank stoppen und wieder starten
+- Starting/stopping/removing the container:
 ```
 docker stop mdb
 docker start mdb
-```
-- Container löschen
-```
 docker rm mdb
 ```
-
