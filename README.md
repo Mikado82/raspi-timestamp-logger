@@ -42,8 +42,36 @@ sudo ./b2 install
   make -j 4
   ```
   - The ``-j 4`` is optional and compiles up to four files in parallel.
+
 - To launch the program, run:
   ```shell
   ./build/starttime
   ```
-  - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument. 
+  - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument.
+  
+## Setup Test Database
+- MariaDB-Container erzeugen und darauf verbinden
+```
+docker run -p 3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=starttimes123! -d mariadb:latest
+docker exec -it mdb mariadb --user root -pstarttimes123!
+```
+- Datenbank und Tabelle anlegen
+```
+CREATE DATABASE regatta;
+USE regatta;
+CREATE TABLE starttimes (
+	start_id int NOT NULL AUTO_INCREMENT,
+	start_time varchar(255) NOT NULL,
+	PRIMARY KEY (start_id));
+SELECT * FROM starttimes;
+```
+- Zum Testen: Datenbank stoppen und wieder starten
+```
+docker stop mdb
+docker start mdb
+```
+- Container löschen
+```
+docker rm mdb
+```
+
