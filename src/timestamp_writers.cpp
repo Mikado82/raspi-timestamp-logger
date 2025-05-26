@@ -47,7 +47,6 @@ db_writer::db_writer(
     : conn(ctx), table_name(table_name)
 {
     // Connect to the database
-    params.auth_plugin_name = "mysql_native_password";
     conn.connect(params);
 }
 
