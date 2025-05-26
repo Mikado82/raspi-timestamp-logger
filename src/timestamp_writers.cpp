@@ -5,6 +5,7 @@
 #include <boost/mysql/with_params.hpp>
 #include <boost/mysql/results.hpp>
 #include <boost/mysql/error_with_diagnostics.hpp>
+#include <boost/mysql/handshake_params.hpp>
 
 using namespace std;
 
