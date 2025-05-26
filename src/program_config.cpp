@@ -53,10 +53,6 @@ void program_config::read_from_ini(std::string filename)
         // Read database and table name
         db_params.database = pt.get<string>("DB.Database");
         db_table_name = pt.get<string>("DB.Table");
-
-        // set auth plugin
-        db_params.auth_plugin_name = "mysql_native_password";
-
     }
 }
 

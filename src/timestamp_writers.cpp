@@ -47,7 +47,9 @@ db_writer::db_writer(
     : conn(ctx), table_name(table_name)
 {
     // Connect to the database
-    conn.connect(params);
+    boost::mysql::handshake_params hs_params;
+    hs_params.auth_plugin_name = "mysql_native_password";
+    conn.connect(params, hs_params);
 }
 
 void db_writer::operator()(const string &timestamp)
