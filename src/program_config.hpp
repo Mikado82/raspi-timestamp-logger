@@ -32,7 +32,7 @@ public:
     
     // Database connection info
     boost::mysql::connect_params db_params;
-    params.auth_plugin_name = "mysql_native_password";
+    db_params.auth_plugin_name = "mysql_native_password";
     std::string db_table_name;
 };
 
