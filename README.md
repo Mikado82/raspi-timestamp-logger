@@ -1,4 +1,4 @@
-# Starttime
+# Reliable Timestamp Logger
 
 ## Build/Install Dependencies
 
@@ -45,25 +45,25 @@ sudo ./b2 install
 
 - To launch the program, run:
   ```shell
-  ./build/starttime
+  ./build/timestamp-logger
   ```
   - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument.
   
 ## Setup Test Database
 - Create MariaDB docker container and connect to it:
 ```
-docker run -p 3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=starttimes123! -d mariadb:latest
-docker exec -it mdb mariadb --user root -pstarttimes123!
+docker run -p 3306:3306  --name mdb -e MARIADB_ROOT_PASSWORD=example-password -d mariadb:latest
+docker exec -it mdb mariadb --user root -pexample-password
 ```
 - Create database and table:
 ```
-CREATE DATABASE regatta;
-USE regatta;
-CREATE TABLE starttimes (
+CREATE DATABASE example-db;
+USE example-db;
+CREATE TABLE timestamps (
 	start_id int NOT NULL AUTO_INCREMENT,
 	start_time varchar(255) NOT NULL,
 	PRIMARY KEY (start_id));
-SELECT * FROM starttimes;
+SELECT * FROM timestamps;
 ```
 - Starting/stopping/removing the container:
 ```
