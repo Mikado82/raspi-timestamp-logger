@@ -45,7 +45,7 @@ sudo ./b2 install
 
 - To launch the program, run:
   ```shell
-  ./build/timestamp-logger
+  ./build/raspi-timestamp-logger
   ```
   - This reads the default ``config.ini`` file. To use a different file, pass it as the first command line argument.
   
