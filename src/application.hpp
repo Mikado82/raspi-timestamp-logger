@@ -44,7 +44,7 @@ private:
     static void writer_thread(
         const std::string_view name,
         synced_queue<std::string> &input_queue,
-        std::function<TimestampWriter()> create_writer
+        std::function<TimestampWriter()> writer_factory
     );
 
     // Get a nicely formatted timestamp

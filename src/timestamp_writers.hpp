@@ -23,6 +23,7 @@ public:
     static void handle_exception(std::exception_ptr ex_ptr);
 
 private:
+    // The output file stream
     std::ofstream file;
 };
 

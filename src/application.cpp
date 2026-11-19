@@ -126,7 +126,7 @@ template<typename TimestampWriter>
 void Application::writer_thread(
     const string_view name,
     synced_queue<string> &input_queue,
-    function<TimestampWriter()> create_writer)
+    function<TimestampWriter()> writer_factory)
 {   
     // Compile-time check if the writer is a suitable callable
     static_assert(is_invocable_v<TimestampWriter, const string&>,
@@ -171,7 +171,7 @@ void Application::writer_thread(
                 cout << "Retrying to write to the " << name << " in 10 sec... ";
                 cout << "(unwritten timestamps: " << unwritten_timestamps.size() << ")\n";
                 
-                // Wait five seconds
+                // Wait ten seconds
                 this_thread::sleep_for(chrono::seconds(10));
 
                 // Check if we are done
@@ -187,7 +187,7 @@ void Application::writer_thread(
             try
             {
                 // Create a writer object
-                TimestampWriter writer = create_writer();
+                TimestampWriter writer = writer_factory();
 
                 // Get each timestamp from the unwritten queue
                 while(!unwritten_timestamps.empty())
@@ -212,8 +212,8 @@ void Application::writer_thread(
             // via call the writer's exception handler function
             if(ex_ptr) TimestampWriter::handle_exception(ex_ptr);
             
-            // Check if everything was written and
-            // set the retrying flag accordingly
+            // Check if everything was written;
+            // if not, set the retrying flag
             retrying = !unwritten_timestamps.empty();
         }
         // Repeat until we are done
