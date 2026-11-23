@@ -1,4 +1,4 @@
-# Reliable Timestamp Logger
+# Reliable Timestamp Logger for the Raspberry Pi
 
 ## Build/Install Dependencies
 
